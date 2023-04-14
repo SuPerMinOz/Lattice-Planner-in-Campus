@@ -277,46 +277,18 @@ void update_global_map(pcl::PointCloud<PointType>::Ptr global_map,
 
 void virtual_barrier_generation(PointType &start_point, PointType &end_point, pcl::PointCloud<PointType>::Ptr virtual_barrier)
 {
-    // double dy = end_point.y - start_point.y;
-    // double dx = end_point.x - start_point.x;
-    // double yaw = std::atan2(dy, dx);
-    // double distance = std::sqrt(std::pow(dx, 2) + std::pow(dy, 2));
-    PointType origin_point;
-    origin_point.x = 0.66;
-    origin_point.y = 2.65;
-    double level_step = std::max(0.1, (peak - foot) / 2.0);
-    // for (double i = foot; i <= peak; i += level_step)
-    // {
-    //     PointType barrier_point;
-    //     barrier_point.z = i;
-    //     for (double j = 0; j <= distance; j += 0.4)
-    //     {
-    //         barrier_point.x = start_point.x + j * cos(yaw);
-    //         barrier_point.y = start_point.y + j * sin(yaw);
-    //         virtual_barrier->points.emplace_back(barrier_point);
-    //     }
-    // }
-
-    // for (double i = foot; i <= peak; i += level_step)
-    // {
-    for (double i = -0.2; i <= 0.4; i += 0.2)
+    double dy = end_point.y - start_point.y;
+    double dx = end_point.x - start_point.x;
+    double yaw = std::atan2(dy, dx);
+    double distance = std::sqrt(std::pow(dx, 2) + std::pow(dy, 2));
+    for (double i = foot; i <= peak; i += level_step)
     {
         PointType barrier_point;
         barrier_point.z = i;
-        for (double j = 0; j <= 10.6; j += 0.2)
+        for (double j = 0; j <= distance; j += 0.4)
         {
-            barrier_point.x = origin_point.x + j;
-            barrier_point.y = origin_point.y;
-            virtual_barrier->points.emplace_back(barrier_point);
-
-            barrier_point.x = origin_point.x + j;
-            barrier_point.y = origin_point.y + 9.9;
-            virtual_barrier->points.emplace_back(barrier_point);
-        }
-        for (double j = 10.6; j <= 12.0; j += 0.2)
-        {
-            barrier_point.x = origin_point.x + j;
-            barrier_point.y = origin_point.y + 9.9;
+            barrier_point.x = start_point.x + j * cos(yaw);
+            barrier_point.y = start_point.y + j * sin(yaw);
             virtual_barrier->points.emplace_back(barrier_point);
         }
     }
@@ -393,8 +365,7 @@ void picking_point_callback(const pcl::visualization::PointPickingEvent &event, 
         }
         else if (current_mode == 2)
         {
-            // virtual_barrier_generation(start_point, end_point, virtual_barrier);
-            virtual_barrier_generation(start_point, start_point, virtual_barrier);
+            virtual_barrier_generation(start_point, end_point, virtual_barrier);
         }
     }
 
