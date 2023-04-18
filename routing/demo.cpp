@@ -22,6 +22,7 @@ pcl::PointCloud<PointType>::Ptr grid_map(new pcl::PointCloud<PointType>());
 pcl::PointCloud<PointType>::Ptr astar_path(new pcl::PointCloud<PointType>());
 pcl::PointCloud<PointType>::Ptr global_path(new pcl::PointCloud<PointType>());
 pcl::PointCloud<PointType>::Ptr virtual_barrier(new pcl::PointCloud<PointType>());
+pcl::PointCloud<PointType>::Ptr virtual_barrier_sum(new pcl::PointCloud<PointType>());
 
 void gridmap_generation(pcl::PointCloud<PointType>::Ptr global_map,
                         pcl::PointCloud<PointType>::Ptr boundingbox_sum,
@@ -263,16 +264,18 @@ void generate_reference_line(Spline2D &Trajectory, std::shared_ptr<ReferenceLine
 }
 
 void update_global_map(pcl::PointCloud<PointType>::Ptr global_map,
-                       pcl::PointCloud<PointType>::Ptr virtual_barrier)
+                       pcl::PointCloud<PointType>::Ptr virtual_barrier,
+                       pcl::PointCloud<PointType>::Ptr virtual_barrier_sum)
 {
     *global_map += *virtual_barrier;
     global_map->height = 1;
     global_map->width = global_map->points.size();
     pcl::io::savePCDFileASCII("./global_map.pcd", *global_map);
 
-    virtual_barrier->height = 1;
-    virtual_barrier->width = virtual_barrier->points.size();
-    pcl::io::savePCDFileASCII("./virtual_barrier.pcd", *virtual_barrier);
+    *virtual_barrier_sum += *virtual_barrier;
+    virtual_barrier_sum->height = 1;
+    virtual_barrier_sum->width = virtual_barrier_sum->points.size();
+    pcl::io::savePCDFileASCII("./virtual_barrier.pcd", *virtual_barrier_sum);
 }
 
 void virtual_barrier_generation(PointType &start_point, PointType &end_point, pcl::PointCloud<PointType>::Ptr virtual_barrier)
@@ -281,6 +284,7 @@ void virtual_barrier_generation(PointType &start_point, PointType &end_point, pc
     double dx = end_point.x - start_point.x;
     double yaw = std::atan2(dy, dx);
     double distance = std::sqrt(std::pow(dx, 2) + std::pow(dy, 2));
+    double level_step = std::max(0.1, (peak - foot) / 2.0);
     for (double i = foot; i <= peak; i += level_step)
     {
         PointType barrier_point;
@@ -420,7 +424,7 @@ void map_save_callback(const pcl::visualization::KeyboardEvent &event, void *arg
 
     if (event.getKeySym() == "s" && event.keyDown())
     {
-        update_global_map(global_map, virtual_barrier);
+        update_global_map(global_map, virtual_barrier, virtual_barrier_sum);
         virtual_barrier->points.clear();
         boundingbox_sum->points.clear();
         grid_map->points.clear();
